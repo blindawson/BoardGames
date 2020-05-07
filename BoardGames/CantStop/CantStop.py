@@ -77,35 +77,41 @@ class Turn:
         self.player = player
         self.board = board
         self.dice = Dice()
-        print('taking a turn')
         self.start_turn()
-        self.roll()
-        self.resolve_roll()
-        self.ask_continue()
 
     def start_turn(self):
         print(f"{self.player.name}'s Turn")
+        self.roll()
 
     def roll(self):
         self.dice = self.dice.roll_dice()
-        print(f'{self.player.name} rolled: {self.dice}\n')
+        print(f'{self.player.name} rolled: {self.dice}')
+        self.resolve_roll()
 
     def resolve_roll(self):
-        pass
+        self.choose_dice()
 
     def choose_dice(self):
         print(f'Your options are:')
-        self.dice.pair()
+        self.dice.pair(verbose=True)
         option = int(input('Choose pair 1, 2, or 3:'))
-        # self.player.columns[dice_.pair()[option - 1]] += 1
+        if option not in [1, 2, 3]:
+            print(f'You Chose {option}. Please choose 1, 2, or 3.')
+            self.choose_dice()
+        else:
+            self.player.columns[self.dice.pair()[option - 1][0]] += 1
+            self.player.columns[self.dice.pair()[option - 1][1]] += 1
+            print(self.player.columns.to_frame().T)
+            self.ask_continue()
 
     def ask_continue(self):
-        pass
+        option = str(input('Continue [y/n]?'))
+        if option == 'y':
+            self.roll()
 
 
 class Game:
     def __init__(self, *args):
-        print(type(list(args)))
         self.board = Board(args)
         self.players = []
         for player in args:
@@ -113,9 +119,14 @@ class Game:
                 self.players.append(Player(player))
             elif isinstance(player, Player):
                 self.players.append(player)
+        if len(args) == 0:
+            self.players.append(Player('P1'))
+            self.players.append(Player('P2'))
         self.starting_player = np.random.choice(self.players)
         Turn(self.starting_player, self.board)
 
+    def turn(self, player):
+        Turn(player, self.board)
 
     # TODO Check that Num players is 2 to 4
     # TODO Choose first player
