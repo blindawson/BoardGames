@@ -72,20 +72,31 @@ class Player:
                 f'{self.columns.to_frame().T}')
 
 
-class Turn:
-    def __init__(self, player, board):
-        self.player = player
-        self.board = board
+class Game:
+    def __init__(self, *args):
+        self.board = Board(args)
+        self.players = []
         self.dice = Dice()
-        self.start_turn()
+        for player in args:
+            if isinstance(player, str):
+                self.players.append(Player(player))
+            elif isinstance(player, Player):
+                self.players.append(player)
+        if len(args) == 0:
+            self.players.append(Player('P1'))
+            self.players.append(Player('P2'))
+        self.starting_player = np.random.choice(self.players)
+        self.active_player = self.starting_player
+        self.start_turn(self.starting_player)
 
-    def start_turn(self):
-        print(f"{self.player.name}'s Turn")
+    def start_turn(self, player):
+        self.active_player = player
+        print(f"{player.name}'s Turn")
         self.roll()
 
     def roll(self):
         self.dice = self.dice.roll_dice()
-        print(f'{self.player.name} rolled: {self.dice}')
+        print(f'{self.active_player.name} rolled: {self.dice}')
         self.resolve_roll()
 
     def resolve_roll(self):
@@ -99,34 +110,29 @@ class Turn:
             print(f'You Chose {option}. Please choose 1, 2, or 3.')
             self.choose_dice()
         else:
-            self.player.columns[self.dice.pair()[option - 1][0]] += 1
-            self.player.columns[self.dice.pair()[option - 1][1]] += 1
-            print(self.player.columns.to_frame().T)
+            self.active_player.columns[self.dice.pair()[option - 1][0]] += 1
+            self.active_player.columns[self.dice.pair()[option - 1][1]] += 1
+            print(self.active_player.columns.to_frame().T)
             self.ask_continue()
 
     def ask_continue(self):
         option = str(input('Continue [y/n]?'))
         if option == 'y':
+            print("Can't Stop!")
             self.roll()
+        if option == 'n':
+            print("Chicken!")
+            self.end_turn()
 
+    def end_turn(self):
+        self.start_turn(self.next_player())
 
-class Game:
-    def __init__(self, *args):
-        self.board = Board(args)
-        self.players = []
-        for player in args:
-            if isinstance(player, str):
-                self.players.append(Player(player))
-            elif isinstance(player, Player):
-                self.players.append(player)
-        if len(args) == 0:
-            self.players.append(Player('P1'))
-            self.players.append(Player('P2'))
-        self.starting_player = np.random.choice(self.players)
-        Turn(self.starting_player, self.board)
-
-    def turn(self, player):
-        Turn(player, self.board)
+    def next_player(self):
+        index = self.players.index(self.active_player) + 1
+        if index == len(self.players):
+            index = 0
+        self.active_player = self.players[index]
+        return self.active_player
 
     # TODO Check that Num players is 2 to 4
     # TODO Choose first player
