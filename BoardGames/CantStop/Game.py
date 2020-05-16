@@ -148,8 +148,6 @@ def progress_value(row, position=0):
     else:
         return 1 / remaining_spaces
 
-def check_pair(pair):
-
 
 # TODO turn counter
 # TODO bust
