@@ -25,8 +25,10 @@ class Game:
 
     def start_turn(self, player):
         self.active_player = player
-        print(f"{player.name}'s Turn")
-        self.roll()
+        option = str(input('Play Game [y/n]?'))
+        if option == 'y':
+            print(f"{player.name}'s Turn")
+            self.roll()
 
     def roll(self):
         self.dice = self.dice.roll_dice()
@@ -34,16 +36,60 @@ class Game:
         self.resolve_roll()
 
     def resolve_roll(self):
-        self.check_dice()
-        self.choose_dice()
+        pairs = self.dice.pair()
+        use_pair1 = self.check_pair(pairs[0])
+        use_pair2 = self.check_pair(pairs[1])
+        use_pair3 = self.check_pair(pairs[2])
+        self.choose_dice([use_pair1, use_pair2, use_pair3])
 
-    def choose_dice(self):
+    def check_pair(self, pair):
+        runners = self.active_player.runners
+        available_runners = 3 - len(runners)
+        if available_runners >= 2:
+            use_pair = 'YY'
+        elif available_runners == 1:
+            if any(x in runners for x in pair):
+                use_pair = 'YY'
+            else:
+                use_pair = 'YorY'
+        else:
+            if all(x in runners for x in pair):
+                use_pair = 'YY'
+            elif pair[0] in runners:
+                use_pair = 'YN'
+            elif pair[1] in runners:
+                use_pair = 'NY'
+            else:
+                use_pair = 'NN'
+        return use_pair
+
+    @staticmethod
+    def column_options(self, pair, use_pair, option_dict):
+        n = len(option_dict)
+        if use_pair == 'YY':
+            option_dict.update({n + 1: pair})
+            print(f'{n + 1}: Move {pair[0]} and {pair[1]}')
+        elif use_pair == 'YN':
+            option_dict.update({n + 1: [pair[0]]})
+            print(f'{n + 1}: Move {pair[0]}')
+        elif use_pair == 'NY':
+            option_dict.update({n + 1: [pair[1]]})
+            print(f'{n + 1}: Move {pair[1]}')
+        if use_pair == 'YorY':
+            option_dict.update({n + 1: [pair[0]], n + 2: [pair[1]]})
+            print(f'{n + 1}: Move {pair[0]}\n'
+                  f'{n + 2}: Move {pair[1]}')
+        return option_dict
+
+    def choose_dice(self, use_pairs):
         print(f'Your options are:')
-        self.dice.pair(verbose=True)
-        option = int(input('Choose pair 1, 2, or 3:'))
-        if option not in [1, 2, 3]:
-            print(f'You Chose {option}. Please choose 1, 2, or 3.')
-            self.choose_dice()
+        option_dict = {}
+        for pair, use_pair in zip(self.dice.pair(), use_pairs):
+            option_dict = self.column_options(pair, use_pair, option_dict)
+        option = int(input('Choose option:'))
+        if option not in range(1, len(option_dict) + 1):
+            print(f'You Chose {option}. Please choose 1-{len(option_dict)}.')
+            self.choose_dice(use_pairs)
         else:
             self.active_player.columns[self.dice.pair()[option - 1][0]] += 1
             self.active_player.columns[self.dice.pair()[option - 1][1]] += 1
@@ -58,6 +104,8 @@ class Game:
         if option == 'n':
             print("Chicken!")
             self.end_turn()
+        else:
+            pass
 
     def end_turn(self):
         self.start_turn(self.next_player())
