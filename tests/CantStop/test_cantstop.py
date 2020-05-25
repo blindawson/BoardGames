@@ -7,7 +7,7 @@ dice_df = pd.read_csv('dice_df.csv', header=0, index_col=0)
 
 
 def test_dice_class():
-    dice = Dice.Dice(1, 2, 5, 6)
+    dice = Components.Dice(1, 2, 5, 6)
     assert dice.values[0] == 1
     assert dice.values[1] == 2
     assert dice.values[2] == 5
@@ -15,17 +15,17 @@ def test_dice_class():
 
 
 def test_board_class():
-    board = Board.Board('p1', 'p2', 'p3', 'p4')
+    board = Components.Board('p1', 'p2', 'p3', 'p4')
     assert board.col_len[9] == 9
 
 
 def test_pair_dice():
-    dice = Dice.Dice(1, 2, 5, 6)
+    dice = Components.Dice(1, 2, 5, 6)
     assert dice.pair() == [[3, 11], [6, 8], [7, 7]]
 
 
 def test_all_dice_combinations():
-    assert Dice.all_dice_combinations().values == pytest.approx(dice_df.values)
+    assert Components.all_dice_combinations().values == pytest.approx(dice_df.values)
 
 
 def test_odds_table():

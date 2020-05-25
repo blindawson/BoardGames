@@ -1,2 +1,2 @@
-__all__ = ['Player', 'Dice', 'Board', 'Game']
+__all__ = ['Player', 'Components', 'Game']
 

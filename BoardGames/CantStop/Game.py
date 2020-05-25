@@ -1,16 +1,17 @@
 import pandas as pd
 import numpy as np
 from itertools import combinations
-from BoardGames.CantStop import Board
+from BoardGames.CantStop import Components
 from BoardGames.CantStop import Player
-from BoardGames.CantStop import Dice
+
+# The game holds the rules of the game and turn progression.
 
 
 class Game:
     def __init__(self, *args):
-        self.board = Board(args)
+        self.board = Components(args)
         self.players = []
-        self.dice = Dice()
+        self.dice = Components.Dice()
         for player in args:
             if isinstance(player, str):
                 self.players.append(Player(player))
@@ -28,23 +29,24 @@ class Game:
         option = str(input('Play Game [y/n]?'))
         if option == 'y':
             print(f"{player.name}'s Turn")
-            self.roll()
+            self.roll_dice()
 
-    def roll(self):
+    def roll_dice(self):
         self.dice = self.dice.roll_dice()
         print(f'{self.active_player.name} rolled: {self.dice}')
-        self.resolve_roll()
+        self.check_dice()
 
-    def resolve_roll(self):
+    def check_dice(self):
         pairs = self.dice.pair()
-        use_pair1 = self.check_pair(pairs[0])
-        use_pair2 = self.check_pair(pairs[1])
-        use_pair3 = self.check_pair(pairs[2])
-        self.choose_dice([use_pair1, use_pair2, use_pair3])
+        use_pairs = list(map(lambda x: self.check_dice_pairing(x), self.pairs))
+        if all(x == 'NN' for x in use_pairs):
+            self.Bust()
+        else:
+            self.choose_dice(use_pairs)
 
-    def check_pair(self, pair):
+    def check_dice_pairing(self, pair):
         runners = self.active_player.runners
-        available_runners = 3 - len(runners)
+        available_runners = sum(self.board.available_runners())
         if available_runners >= 2:
             use_pair = 'YY'
         elif available_runners == 1:
@@ -64,7 +66,7 @@ class Game:
         return use_pair
 
     @staticmethod
-    def column_options(self, pair, use_pair, option_dict):
+    def list_progress_options(self, pair, use_pair, option_dict):
         n = len(option_dict)
         if use_pair == 'YY':
             option_dict.update({n + 1: pair})
@@ -75,7 +77,7 @@ class Game:
         elif use_pair == 'NY':
             option_dict.update({n + 1: [pair[1]]})
             print(f'{n + 1}: Move {pair[1]}')
-        if use_pair == 'YorY':
+        elif use_pair == 'YorY':
             option_dict.update({n + 1: [pair[0]], n + 2: [pair[1]]})
             print(f'{n + 1}: Move {pair[0]}\n'
                   f'{n + 2}: Move {pair[1]}')
@@ -85,14 +87,13 @@ class Game:
         print(f'Your options are:')
         option_dict = {}
         for pair, use_pair in zip(self.dice.pair(), use_pairs):
-            option_dict = self.column_options(pair, use_pair, option_dict)
+            option_dict = self.list_progress_options(pair, use_pair, option_dict)
         option = int(input('Choose option:'))
         if option not in range(1, len(option_dict) + 1):
             print(f'You Chose {option}. Please choose 1-{len(option_dict)}.')
             self.choose_dice(use_pairs)
         else:
-            self.active_player.columns[self.dice.pair()[option - 1][0]] += 1
-            self.active_player.columns[self.dice.pair()[option - 1][1]] += 1
+            self.active_player.climb_columns(option_dict(option))
             print(self.active_player.columns.to_frame().T)
             self.ask_continue()
 
@@ -100,9 +101,10 @@ class Game:
         option = str(input('Continue [y/n]?'))
         if option == 'y':
             print("Can't Stop!")
-            self.roll()
+            self.roll_dice()
         if option == 'n':
             print("Chicken!")
+            self.lock_in_progress()
             self.end_turn()
         else:
             pass
@@ -117,6 +119,16 @@ class Game:
         self.active_player = self.players[index]
         return self.active_player
 
+    def bust(self):
+        self.end_turn()
+        pass
+
+    # TODO
+    def lock_in_progress(self):
+        # Player progress gets updated to height of each in-use runner
+
+        pass
+
     # TODO Check that Num players is 2 to 4
     # TODO Choose first player
     # TODO Make a turn class and have the first player take their turn
@@ -128,7 +140,7 @@ class Game:
 def odds(*args):
     hits = pd.DataFrame([])
     for i, num in enumerate(args):
-        hits[i] = (Dice.all_dice_combinations().loc[:, 'D01':'D12'] == num).any(axis=1)
+        hits[i] = (Components.all_dice_combinations().loc[:, 'D01':'D12'] == num).any(axis=1)
     hits['any'] = hits.loc[:, 0:len(args)].any(axis=1)
     return hits['any'].sum() / len(hits)
 
@@ -141,7 +153,7 @@ def odds_table():
 
 
 def progress_value(row, position=0):
-    total_spaces = Board.Board().col_len[row]
+    total_spaces = Components.Board().col_len[row]
     remaining_spaces = total_spaces - position
     if remaining_spaces == 0:
         return 0
