@@ -14,30 +14,6 @@ class Board:
         self.df['Locked'] = False
         self.runners = [Runner(), Runner(), Runner()]
 
-    def available_runners(self):
-        return list(map(lambda x: x.available(), self.runners))
-
-    def in_use_runners(self):
-        return list(map(lambda x: x.in_use(), self.runners))
-
-    def next_runner(self):
-        try:
-            return self.runners.available_runners().index(True)
-        except ValueError:
-            raise Exception('No runners available.')
-
-    # TODO
-    def active_runner(self):
-        pass
-
-    def move_runner(self, column_number):
-        # TODO
-        # self.choose_runner
-        # player.columns[column_number] += 1
-        # if column_number not in self.runners:
-        #     self.runners[self.next_runner()] = column_number
-        pass
-
     def lock_column(self, column_number):
         if self.df.loc[column_number, 'Locked']:
             raise Exception('Column is already locked.')
@@ -51,9 +27,9 @@ class Runner:
         self.column = 0
         self.height = 0
 
-    def place_runner(self, player, col):
+    def place_runner(self, col, height):
         self.column = col
-        self.height = player.columns[col]
+        self.height = height
 
     def advance(self):
         self.height += 1
@@ -66,6 +42,44 @@ class Runner:
 
     def in_use(self):
         return not self.available()
+
+    @staticmethod
+    def available_runners(runners):
+        return list(map(lambda x: x.available(), runners))
+
+    @staticmethod
+    def in_use_runners(runners):
+        return list(map(lambda x: x.in_use(), runners))
+
+    @staticmethod
+    def next_runner(runners):
+        try:
+            return runners.available_runners().index(True)
+        except ValueError:
+            raise Exception('No runners available.')
+
+    @staticmethod
+    def advance_runner(runners, column, height=1):
+        for i, r in enumerate(runners):
+            if r.column == column:
+                runners[i].advance()
+                return runners
+        i = Runner.available_runners(runners).index(True)
+        runners[i].place_runner(column, height)
+        return runners
+
+
+    # TODO
+    def active_runner(self):
+        pass
+
+    def move_runner(self, column_number):
+        # TODO
+        # self.choose_runner
+        # player.columns[column_number] += 1
+        # if column_number not in self.runners:
+        #     self.runners[self.next_runner()] = column_number
+        pass
 
 
 class Dice:
