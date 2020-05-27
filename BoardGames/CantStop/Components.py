@@ -3,14 +3,12 @@ import numpy as np
 
 
 class Board:
-    def __init__(self, *players):
-        if len(players) == 0:
-            players = ('p1', 'p2')
+    def __init__(self, players):
         self.col_len = pd.Series([3, 5, 7, 9, 11, 13, 11, 9, 7, 5, 3],
-                                 index=range(2, 13), name='Column Length')
+                                 index=range(2, 13), name='Column Height')
         self.df = pd.DataFrame(0, index=self.col_len.index, columns=['Runners'] + list(players))
-        self.df.index.name = 'Column Number'
-        self.df['Column Length'] = self.col_len
+        self.df.index.name = 'Column'
+        self.df['Column Height'] = self.col_len
         self.df['Locked'] = False
         self.runners = [Runner(), Runner(), Runner()]
 
@@ -19,13 +17,27 @@ class Board:
             raise Exception('Column is already locked.')
         self.df.loc[column_number, 'Locked'] = True
 
-    def update_runners_positions(self, runners):
-        for r in runners:
-            if r.in_use():
-                self.df[r.column, 'Runners'] = r.height
-
     def reset_runners(self):
         self.runners = [Runner(), Runner(), Runner()]
+
+    def advance_runners(self, columns, height=1):
+        for c in columns:
+            if self.runners[0].column == c:
+                self.runners[0].advance()
+            elif self.runners[1].column == c:
+                self.runners[1].advance()
+            elif self.runners[2].column == c:
+                self.runners[2].advance()
+            else:
+                i = [x.available() for x in self.runners].index(True)
+                self.runners[i].place_runner(c, height)
+        active_runners = list(filter(lambda x: x.column != 0, self.runners))
+        runner_cols = [x.column for x in active_runners]
+        runner_heights = [x.height for x in active_runners]
+        self.df.loc[runner_cols, 'Runners'] = runner_heights
+
+    def lock_in_progress(self, player):
+        self.df.loc[:, player.name] = self.df.loc[:, ['Runners', player.name]].max(axis=1)
 
     # TODO add __repr__. It'd be extra cool if this could be a figure
 
@@ -48,45 +60,8 @@ class Runner:
         else:
             return False
 
-    def in_use(self):
+    def active(self):
         return not self.available()
-
-    @staticmethod
-    def available_runners(runners):
-        return list(map(lambda x: x.available(), runners))
-
-    @staticmethod
-    def in_use_runners(runners):
-        return list(map(lambda x: x.in_use(), runners))
-
-    @staticmethod
-    def next_runner(runners):
-        try:
-            return runners.available_runners().index(True)
-        except ValueError:
-            raise Exception('No runners available.')
-
-    @staticmethod
-    def advance_runners(runners, columns, height=1):
-        for c in columns:
-            if runners[0].column == c:
-                runners[0].advance()
-            elif runners[1].column == c:
-                runners[1].advance()
-            elif runners[2].column == c:
-                runners[2].advance()
-            else:
-                i = Runner.available_runners(runners).index(True)
-                runners[i].place_runner(c, height)
-        return runners
-
-    @staticmethod
-    def runners_cols(runners):
-        return list(map(lambda x: x.column, runners))
-
-    # TODO
-    def active_runner(self):
-        pass
 
 
 class Dice:
