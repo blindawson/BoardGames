@@ -1,5 +1,5 @@
-from BoardGames.CantStop import CantStop
+from BoardGames.CantStop import Game
 import importlib
-importlib.reload(CantStop)
+importlib.reload(Game)
 
-game = CantStop.Game()
+game = Game.Game()

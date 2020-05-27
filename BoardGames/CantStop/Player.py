@@ -6,17 +6,16 @@ import pandas as pd
 class Player:
     def __init__(self, name='Anonymous'):
         self.score = 0
-        self.columns = pd.Series(0, index=range(2, 13), name='Column Progress')
+        self.columns = pd.DataFrame(0, index=range(2, 13), columns=['Runner Progress', 'Permanent Progress'])
         self.name = name
         self.runners = []
 
     def __repr__(self):
         return (f'{self.name}\n'
                 f'Score: {self.score}\n'
-                f'{self.columns.to_frame().T}')
+                f'{self.columns.T}')
 
     def climb_columns(self, cols):
-        # for each c in cols
-        # If a runner is already on that col then move it up
-        # else grab a new runner and move it up from wherever that player has progressed to on that column
+        for c in cols:
+            self.columns.loc[c, 'Runner Progress'] = self.columns.loc[c, :].max() + 1
         pass

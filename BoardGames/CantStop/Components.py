@@ -19,6 +19,14 @@ class Board:
             raise Exception('Column is already locked.')
         self.df.loc[column_number, 'Locked'] = True
 
+    def update_runners_positions(self, runners):
+        for r in runners:
+            if r.in_use():
+                self.df[r.column, 'Runners'] = r.height
+
+    def reset_runners(self):
+        self.runners = [Runner(), Runner(), Runner()]
+
     # TODO add __repr__. It'd be extra cool if this could be a figure
 
 
@@ -59,26 +67,25 @@ class Runner:
             raise Exception('No runners available.')
 
     @staticmethod
-    def advance_runner(runners, column, height=1):
-        for i, r in enumerate(runners):
-            if r.column == column:
-                runners[i].advance()
-                return runners
-        i = Runner.available_runners(runners).index(True)
-        runners[i].place_runner(column, height)
+    def advance_runners(runners, columns, height=1):
+        for c in columns:
+            if runners[0].column == c:
+                runners[0].advance()
+            elif runners[1].column == c:
+                runners[1].advance()
+            elif runners[2].column == c:
+                runners[2].advance()
+            else:
+                i = Runner.available_runners(runners).index(True)
+                runners[i].place_runner(c, height)
         return runners
 
+    @staticmethod
+    def runners_cols(runners):
+        return list(map(lambda x: x.column, runners))
 
     # TODO
     def active_runner(self):
-        pass
-
-    def move_runner(self, column_number):
-        # TODO
-        # self.choose_runner
-        # player.columns[column_number] += 1
-        # if column_number not in self.runners:
-        #     self.runners[self.next_runner()] = column_number
         pass
 
 
@@ -113,18 +120,18 @@ class Dice:
                   f'{d03} and {d12}')
         return [[d01, d23], [d02, d13], [d03, d12]]
 
-
-def all_dice_combinations():
-    df = pd.DataFrame(
-        np.array(
-            np.meshgrid(range(1, 7), range(1, 7),
-                        range(1, 7), range(1, 7)))
-            .reshape(4, -1).T,
-        columns=['D0', 'D1', 'D2', 'D3'])
-    df['D01'] = df['D0'] + df['D1']
-    df['D23'] = df['D2'] + df['D3']
-    df['D02'] = df['D0'] + df['D2']
-    df['D13'] = df['D1'] + df['D3']
-    df['D03'] = df['D0'] + df['D3']
-    df['D12'] = df['D1'] + df['D2']
-    return df
+    @staticmethod
+    def all_dice_combinations():
+        df = pd.DataFrame(
+            np.array(
+                np.meshgrid(range(1, 7), range(1, 7),
+                            range(1, 7), range(1, 7)))
+                .reshape(4, -1).T,
+            columns=['D0', 'D1', 'D2', 'D3'])
+        df['D01'] = df['D0'] + df['D1']
+        df['D23'] = df['D2'] + df['D3']
+        df['D02'] = df['D0'] + df['D2']
+        df['D13'] = df['D1'] + df['D3']
+        df['D03'] = df['D0'] + df['D3']
+        df['D12'] = df['D1'] + df['D2']
+        return df

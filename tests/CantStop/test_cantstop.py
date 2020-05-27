@@ -25,7 +25,7 @@ def test_pair_dice():
 
 
 def test_all_dice_combinations():
-    assert Components.all_dice_combinations().values == pytest.approx(dice_df.values)
+    assert Components.Dice.all_dice_combinations().values == pytest.approx(dice_df.values)
 
 
 def test_odds_table():
@@ -62,8 +62,8 @@ def test_advance_runner():
     runners = [Components.Runner(), Components.Runner(), Components.Runner()]
     runners[1].column = 7
     runners[1].height = 3
-    runners = Components.Runner.advance_runner(runners, 7)
+    runners = Components.Runner.advance_runners(runners, 7)
     assert runners[1].height == 4
-    runners = Components.Runner.advance_runner(runners, 2)
+    runners = Components.Runner.advance_runners(runners, 2)
     assert runners[0].column == 2
     assert runners[0].height == 1

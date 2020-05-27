@@ -1,4 +1,3 @@
-
 *.pyc
-*.pyc
-BoardGames/CantStop/__pycache__/Components.cpython-37.pyc
+*.xml
+*.iml
