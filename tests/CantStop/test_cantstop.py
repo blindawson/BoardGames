@@ -58,12 +58,3 @@ def test_odds():
 #  Where is that coming from and how do I remove it?
 
 
-def test_advance_runner():
-    runners = [Components.Runner(), Components.Runner(), Components.Runner()]
-    runners[1].column = 7
-    runners[1].height = 3
-    runners = Components.Runner.advance_runners(runners, 7)
-    assert runners[1].height == 4
-    runners = Components.Runner.advance_runners(runners, 2)
-    assert runners[0].column == 2
-    assert runners[0].height == 1

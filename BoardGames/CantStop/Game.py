@@ -36,30 +36,27 @@ class Game:
         self.check_dice()
 
     def check_dice(self):
-        def check_dice_pairing(r, pair):
-            available_runners = sum([x.available() for x in r])
-            active_runner_cols = [x.column for x in r]
-            if available_runners >= 2:
+        def check_dice_pairing(board, pair):
+            if board.available_runners() >= 2:
                 use_pair = 'YY'
-            elif available_runners == 1:
-                if any(x in active_runner_cols for x in pair):
+            elif board.available_runners() == 1:
+                if any(x in board.active_runner_cols() for x in pair):
                     use_pair = 'YY'
                 else:
                     use_pair = 'YorY'
             else:
-                if all(x in active_runner_cols for x in pair):
+                if all(x in board.active_runner_cols() for x in pair):
                     use_pair = 'YY'
-                elif pair[0] in active_runner_cols:
+                elif pair[0] in board.active_runner_cols():
                     use_pair = 'YN'
-                elif pair[1] in active_runner_cols:
+                elif pair[1] in board.active_runner_cols():
                     use_pair = 'NY'
                 else:
                     use_pair = 'NN'
             return use_pair
 
         pairs = self.dice.pair()
-        runners = self.board.runners
-        use_pairs = list(map(lambda x: check_dice_pairing(runners, x), pairs))
+        use_pairs = list(map(lambda x: check_dice_pairing(self.board, x), pairs))
         if all(x == 'NN' for x in use_pairs):
             self.bust()
         else:
@@ -107,7 +104,7 @@ class Game:
             self.choose_dice(use_pairs)
         else:
             selected_cols = option_dict[option]
-            self.board.advance_runners(selected_cols)
+            self.board.advance_runners(self.active_player, selected_cols)
             self.print_status()
             self.ask_continue()
 
@@ -176,4 +173,3 @@ def progress_value(row, position=0):
 
 
 # TODO turn counter
-

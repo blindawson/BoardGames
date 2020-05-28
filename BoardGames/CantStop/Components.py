@@ -3,14 +3,16 @@ import numpy as np
 
 
 class Board:
-    def __init__(self, players):
+    def __init__(self, *args):
+        players = args
+        if players is None:
+            players = ['P1', 'P2']
         self.col_len = pd.Series([3, 5, 7, 9, 11, 13, 11, 9, 7, 5, 3],
                                  index=range(2, 13), name='Column Height')
         self.df = pd.DataFrame(0, index=self.col_len.index, columns=['Runners'] + list(players))
         self.df.index.name = 'Column'
         self.df['Column Height'] = self.col_len
         self.df['Locked'] = False
-        self.runners = [Runner(), Runner(), Runner()]
 
     def lock_column(self, column_number):
         if self.df.loc[column_number, 'Locked']:
@@ -18,50 +20,22 @@ class Board:
         self.df.loc[column_number, 'Locked'] = True
 
     def reset_runners(self):
-        self.runners = [Runner(), Runner(), Runner()]
+        self.df['Runners'] = 0
 
-    def advance_runners(self, columns, height=1):
-        for c in columns:
-            if self.runners[0].column == c:
-                self.runners[0].advance()
-            elif self.runners[1].column == c:
-                self.runners[1].advance()
-            elif self.runners[2].column == c:
-                self.runners[2].advance()
-            else:
-                i = [x.available() for x in self.runners].index(True)
-                self.runners[i].place_runner(c, height)
-        active_runners = list(filter(lambda x: x.column != 0, self.runners))
-        runner_cols = [x.column for x in active_runners]
-        runner_heights = [x.height for x in active_runners]
-        self.df.loc[runner_cols, 'Runners'] = runner_heights
+    def advance_runners(self, player, columns):
+        self.df.loc[columns, 'Runners'] = max(self.df.loc[columns, player]+1,
+                                              self.df.loc[columns, 'Runners']+1)
+
+    def available_runners(self):
+        return 3 - (self.df['Runners'] > 0).sum()
+
+    def active_runner_cols(self):
+        return self.df[self.df['Runners'] > 0].index.values
 
     def lock_in_progress(self, player):
         self.df.loc[:, player.name] = self.df.loc[:, ['Runners', player.name]].max(axis=1)
 
     # TODO add __repr__. It'd be extra cool if this could be a figure
-
-
-class Runner:
-    def __init__(self):
-        self.column = 0
-        self.height = 0
-
-    def place_runner(self, col, height):
-        self.column = col
-        self.height = height
-
-    def advance(self):
-        self.height += 1
-
-    def available(self):
-        if self.column == 0:
-            return True
-        else:
-            return False
-
-    def active(self):
-        return not self.available()
 
 
 class Dice:
