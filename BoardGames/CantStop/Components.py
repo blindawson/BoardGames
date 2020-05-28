@@ -3,8 +3,7 @@ import numpy as np
 
 
 class Board:
-    def __init__(self, *args):
-        players = args
+    def __init__(self, players=None):
         if players is None:
             players = ['P1', 'P2']
         self.col_len = pd.Series([3, 5, 7, 9, 11, 13, 11, 9, 7, 5, 3],
@@ -23,8 +22,8 @@ class Board:
         self.df['Runners'] = 0
 
     def advance_runners(self, player, columns):
-        self.df.loc[columns, 'Runners'] = max(self.df.loc[columns, player]+1,
-                                              self.df.loc[columns, 'Runners']+1)
+        for c in columns:
+            self.df.loc[c, 'Runners'] = self.df.loc[c, [player.name, 'Runners']].max() + 1
 
     def available_runners(self):
         return 3 - (self.df['Runners'] > 0).sum()
@@ -32,8 +31,10 @@ class Board:
     def active_runner_cols(self):
         return self.df[self.df['Runners'] > 0].index.values
 
-    def lock_in_progress(self, player):
+    def lock_runner_progress(self, player):
         self.df.loc[:, player.name] = self.df.loc[:, ['Runners', player.name]].max(axis=1)
+        completed_cols = (self.df.loc[:, player] == self.df.loc[:, 'Column Height'])
+        self.df.loc[completed_cols, 'Locked'] = True
 
     # TODO add __repr__. It'd be extra cool if this could be a figure
 
@@ -46,6 +47,7 @@ class Dice:
             if d is None:
                 d = np.random.randint(1, 7)
             return d
+
         self.values = self.values.apply(lambda d: set_rand(d))
 
     def __repr__(self):

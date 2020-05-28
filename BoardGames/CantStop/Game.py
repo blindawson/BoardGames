@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
-from itertools import combinations
+import sys
+from itertools import combinations, groupby
 from BoardGames.CantStop import Components
 from BoardGames.CantStop import Player
 
@@ -36,74 +37,62 @@ class Game:
         self.check_dice()
 
     def check_dice(self):
-        def check_dice_pairing(board, pair):
+        def remove_unusable_dice_sums(board, pair):
+            for p in pair:
+                if board.df.loc[p, 'Locked']:
+                    pair.remove(p)
             if board.available_runners() >= 2:
-                use_pair = 'YY'
+                pass
             elif board.available_runners() == 1:
                 if any(x in board.active_runner_cols() for x in pair):
-                    use_pair = 'YY'
+                    pass
                 else:
-                    use_pair = 'YorY'
-            else:
-                if all(x in board.active_runner_cols() for x in pair):
-                    use_pair = 'YY'
-                elif pair[0] in board.active_runner_cols():
-                    use_pair = 'YN'
-                elif pair[1] in board.active_runner_cols():
-                    use_pair = 'NY'
-                else:
-                    use_pair = 'NN'
-            return use_pair
+                    pair = pair[0], pair[1]
+            elif board.available_runners() == 0:
+                for p in pair:
+                    if p not in board.active_runner_cols():
+                        pair.remove(p)
+            return pair
 
-        pairs = self.dice.pair()
-        use_pairs = list(map(lambda x: check_dice_pairing(self.board, x), pairs))
-        if all(x == 'NN' for x in use_pairs):
+        def clean_list(list_):
+            for elem in list_:
+                # split tuple into individual entries
+                if type(elem) == tuple:
+                    list_.insert(len(list_), elem[0])
+                    list_.insert(len(list_), elem[1])
+                    list_.remove(elem)
+                # remove empty entries
+                elif not elem:
+                    list_.remove(elem)
+            # ascending order
+            for i, elem in enumerate(list_):
+                if type(elem) == list:
+                    list_[i] = sorted(elem)
+            # remove duplicates
+            list_.sort()
+            list_ = list(x for x, _ in groupby(list_))
+            return list_
+
+        pairs = list(map(lambda x: remove_unusable_dice_sums(self.board, x), self.dice.pair()))
+        pairs = clean_list(pairs)
+        if not pairs:
             self.bust()
         else:
-            self.choose_dice(use_pairs)
+            self.choose_dice(pairs)
 
-    @staticmethod
-    def list_dice_choices(pair, use_pair, option_dict):
-        def is_duplicate(x):
-            if (x in option_dict.values()) or (x[::-1] in option_dict.values()):
-                return True
-            else:
-                return False
-
-        n = len(option_dict)
-        if use_pair == 'YY':
-            if not is_duplicate(pair):
-                option_dict.update({n + 1: pair})
-                print(f'{n + 1}: Move {pair[0]} and {pair[1]}')
-        elif use_pair == 'YN':
-            if not is_duplicate([pair[0]]):
-                option_dict.update({n + 1: [pair[0]]})
-                print(f'{n + 1}: Move {pair[0]}')
-        elif use_pair == 'NY':
-            if not is_duplicate([pair[1]]):
-                option_dict.update({n + 1: [pair[1]]})
-                print(f'{n + 1}: Move {pair[1]}')
-        elif use_pair == 'YorY':
-            if not is_duplicate([pair[0]]):
-                option_dict.update({n + 1: [pair[0]]})
-                print(f'{n + 1}: Move {pair[0]}')
-                n += 1
-            if not is_duplicate([pair[1]]):
-                option_dict.update({n + 1: [pair[1]]})
-                print(f'{n + 1}: Move {pair[1]}')
-        return option_dict
-
-    def choose_dice(self, use_pairs):
+    def choose_dice(self, pairs):
         print(f'Your options are:')
-        option_dict = {}
-        for pair, use_pair in zip(self.dice.pair(), use_pairs):
-            option_dict = self.list_dice_choices(pair, use_pair, option_dict)
-        option = int(input('Choose option:'))
-        if option not in range(1, len(option_dict) + 1):
-            print(f'You Chose {option}. Please choose 1-{len(option_dict)}.')
-            self.choose_dice(use_pairs)
+        for i, p in enumerate(pairs):
+            if len(p) == 2:
+                print(f'{i+1}: Move {p[0]} and {p[1]}')
+            else:
+                print(f'{i+1}: Move {p[0]}')
+        option = int(input('Choose option:')) - 1
+        if option not in range(len(pairs)):
+            print(f'You Chose {option}. Please choose 1-{len(pairs)}.')
+            self.choose_dice(pairs)
         else:
-            selected_cols = option_dict[option]
+            selected_cols = pairs[option]
             self.board.advance_runners(self.active_player, selected_cols)
             self.print_status()
             self.ask_continue()
@@ -115,15 +104,23 @@ class Game:
             self.roll_dice()
         if option == 'n':
             print("Chicken!\n")
-            self.board.lock_in_progress(self.active_player)
+            self.board.lock_runner_progress(self.active_player)
             self.end_turn()
         else:
             pass
 
     def end_turn(self):
         self.board.reset_runners()
-        self.board.df['Runners'] = 0
+        self.check_score()
         self.start_turn(self.next_player())
+
+    def check_score(self):
+        for i in range(len(self.players)):
+            self.players[i].score = (self.board.df.loc[:, self.players[i].name] ==
+                                     self.board.df.loc[:, 'Column Height']).sum()
+        if any(p.score >= 3 for p in self.players):
+            print(f'{self.active_player} Wins!!!')
+            sys.exit('Game Over')
 
     def next_player(self):
         index = self.players.index(self.active_player) + 1
