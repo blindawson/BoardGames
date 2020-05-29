@@ -13,7 +13,7 @@ class Game:
     def __init__(self, players=('P1', 'P2'), random_state=None):
         if random_state is not None:
             np.random.set_state(random_state)
-        pickle.dump(np.random.get_state(), open('random states/rand_state.p', 'wb'))
+        pickle.dump(np.random.get_state(), open('logs/rand_state.p', 'wb'))
         self.pairs = []
         self.dice = Components.Dice()
         self.players = []
@@ -25,16 +25,21 @@ class Game:
         self.board = Components.Board(players)
         self.starting_player = np.random.choice(self.players)
         self.active_player = self.starting_player
+        self.option_log = []
         self.start_turn(self.starting_player)
 
     def start_turn(self, player):
         self.active_player = player
         self.print_status()
         option = input('Continue Game? [y/n]')
+        self.option_log.append(option)
+        pickle.dump(self.option_log, open('logs/user_inputs.p', 'wb'))
         if option == 'y':
             self.roll_dice()
         elif option == 'q':
             roll = read_array_input(input('What dice did you roll? [d1, d2, d3, d4]'))
+            self.option_log.append(roll)
+            pickle.dump(self.option_log, open('logs/user_inputs.p', 'wb'))
             self.roll_dice(roll_result=roll)
 
     def roll_dice(self, roll_result=None):
@@ -97,6 +102,8 @@ class Game:
                 print(f'{i+1}: Move {p[0]}')
         # TODO Check to make sure a number is input in the right range.
         option = int(input('Choose option:')) - 1
+        self.option_log.append(option)
+        pickle.dump(self.option_log, open('logs/user_inputs.p', 'wb'))
         if option + 1 == 99:
             print('Quitting in the middle of the game')
         elif option not in range(len(pairs)):
@@ -110,11 +117,15 @@ class Game:
 
     def ask_continue(self):
         option = str(input('Roll again? [y/n]'))
+        self.option_log.append(option)
+        pickle.dump(self.option_log, open('logs/user_inputs.p', 'wb'))
         if option == 'y':
             print("Can't Stop!\n")
             self.roll_dice()
         elif option == 'q':
             roll = read_array_input(input('What dice did you roll? [d1, d2, d3, d4]'))
+            self.option_log.append(roll)
+            pickle.dump(self.option_log, open('logs/user_inputs.p', 'wb'))
             self.roll_dice(roll_result=roll)
         elif option == 'n':
             print("Chicken!\n")

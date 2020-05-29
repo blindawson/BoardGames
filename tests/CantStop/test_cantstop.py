@@ -80,7 +80,7 @@ def test_edge_case03(mocker):
 
 
 def test_edge_case04(mocker):
-    state = pickle.load(open('random states/rand_state04.p', 'rb'))
+    state = pickle.load(open('logs/rand_state04.p', 'rb'))
     user_inputs = ['y', 1, 'y', 1, 'n',
                    'y', 1, 'y', 99]
     mocker.patch('builtins.input', side_effect=user_inputs)

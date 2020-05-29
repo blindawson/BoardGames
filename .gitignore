@@ -1,4 +1,4 @@
 *.pyc
 *.xml
 *.iml
-tests/CantStop/random states/rand_state.p
+tests/CantStop/logs/rand_state.p
