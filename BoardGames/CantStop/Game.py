@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 import sys
-from itertools import combinations, groupby
+import pickle
+from itertools import combinations
 from BoardGames.CantStop import Components
 from BoardGames.CantStop import Player
 
@@ -9,17 +10,19 @@ from BoardGames.CantStop import Player
 
 
 class Game:
-    def __init__(self, *args):
-        self.players = []
+    def __init__(self, players=('P1', 'P2'), random_state=None):
+        if random_state is not None:
+            np.random.set_state(random_state)
+        pickle.dump(np.random.get_state(), open('random states/rand_state.p', 'wb'))
+        self.pairs = []
         self.dice = Components.Dice()
-        if len(args) == 0:
-            args = ('P1', 'P2')
-        for player in args:
+        self.players = []
+        for player in players:
             if isinstance(player, str):
                 self.players.append(Player.Player(player))
             elif isinstance(player, Player):
                 self.players.append(player)
-        self.board = Components.Board(args)
+        self.board = Components.Board(players)
         self.starting_player = np.random.choice(self.players)
         self.active_player = self.starting_player
         self.start_turn(self.starting_player)
@@ -27,12 +30,15 @@ class Game:
     def start_turn(self, player):
         self.active_player = player
         self.print_status()
-        option = str(input('Continue Game? [y/n]'))
+        option = input('Continue Game? [y/n]')
         if option == 'y':
             self.roll_dice()
+        elif option == 'q':
+            roll = read_array_input(input('What dice did you roll? [d1, d2, d3, d4]'))
+            self.roll_dice(roll_result=roll)
 
-    def roll_dice(self):
-        self.dice = self.dice.roll_dice()
+    def roll_dice(self, roll_result=None):
+        self.dice = self.dice.roll_dice(roll_result)
         print(f'{self.active_player.name} rolled: {self.dice}')
         self.check_dice()
 
@@ -49,13 +55,13 @@ class Game:
                 else:
                     pair = pair[0], pair[1]
             elif board.available_runners() == 0:
-                for p in pair:
+                for p in pair[:]:
                     if p not in board.active_runner_cols():
                         pair.remove(p)
             return pair
 
         def clean_list(list_):
-            for elem in list_:
+            for elem in list_[:]:
                 # split tuple into individual entries
                 if type(elem) == tuple:
                     list_.insert(len(list_), elem[0])
@@ -69,26 +75,31 @@ class Game:
                 if type(elem) == list:
                     list_[i] = sorted(elem)
             # remove duplicates
-            list_.sort()
-            list_ = list(x for x, _ in groupby(list_))
-            return list_
+            res = []
+            [res.append(x) for x in list_ if x not in res]
+            return res
 
-        pairs = list(map(lambda x: remove_unusable_dice_sums(self.board, x), self.dice.pair()))
-        pairs = clean_list(pairs)
-        if not pairs:
+        self.pairs = list(map(lambda x: remove_unusable_dice_sums(self.board, x), self.dice.pair()))
+        self.pairs = clean_list(self.pairs)
+        if not self.pairs:
             self.bust()
         else:
-            self.choose_dice(pairs)
+            self.choose_dice(self.pairs)
 
     def choose_dice(self, pairs):
         print(f'Your options are:')
         for i, p in enumerate(pairs):
-            if len(p) == 2:
+            if type(p) != list:
+                print(f'{i + 1}: Move {p}')
+            elif len(p) == 2:
                 print(f'{i+1}: Move {p[0]} and {p[1]}')
             else:
                 print(f'{i+1}: Move {p[0]}')
+        # TODO Check to make sure a number is input in the right range.
         option = int(input('Choose option:')) - 1
-        if option not in range(len(pairs)):
+        if option + 1 == 99:
+            print('Quitting in the middle of the game')
+        elif option not in range(len(pairs)):
             print(f'You Chose {option}. Please choose 1-{len(pairs)}.')
             self.choose_dice(pairs)
         else:
@@ -102,7 +113,10 @@ class Game:
         if option == 'y':
             print("Can't Stop!\n")
             self.roll_dice()
-        if option == 'n':
+        elif option == 'q':
+            roll = read_array_input(input('What dice did you roll? [d1, d2, d3, d4]'))
+            self.roll_dice(roll_result=roll)
+        elif option == 'n':
             print("Chicken!\n")
             self.board.lock_runner_progress(self.active_player)
             self.end_turn()
@@ -168,5 +182,12 @@ def progress_value(row, position=0):
     else:
         return 1 / remaining_spaces
 
+
+def read_array_input(i_array):
+    print(i_array)
+    if type(i_array) == str:
+        i_array = i_array.replace('[', '').replace(']', '')
+        i_array = list(map(int, i_array.strip().split(',')))
+    return i_array
 
 # TODO turn counter

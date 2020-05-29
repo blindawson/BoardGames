@@ -33,28 +33,29 @@ class Board:
 
     def lock_runner_progress(self, player):
         self.df.loc[:, player.name] = self.df.loc[:, ['Runners', player.name]].max(axis=1)
-        completed_cols = (self.df.loc[:, player] == self.df.loc[:, 'Column Height'])
+        completed_cols = (self.df.loc[:, player.name] == self.df.loc[:, 'Column Height'])
         self.df.loc[completed_cols, 'Locked'] = True
 
     # TODO add __repr__. It'd be extra cool if this could be a figure
 
 
 class Dice:
-    def __init__(self, d1=None, d2=None, d3=None, d4=None):
-        self.values = pd.Series([d1, d2, d3, d4])
-
-        def set_rand(d):
-            if d is None:
-                d = np.random.randint(1, 7)
-            return d
-
-        self.values = self.values.apply(lambda d: set_rand(d))
+    def __init__(self, faces=None):
+        # TODO does this need to be a pandas series?
+        if faces is None:
+            self.values = list(np.random.randint(1, 7, 4))
+        else:
+            self.values = faces
 
     def __repr__(self):
         return f'{self.values[0]}, {self.values[1]}, {self.values[2]}, {self.values[3]}'
 
-    def roll_dice(self):
-        self.values = self.values.apply(lambda d: np.random.randint(1, 7))
+    def roll_dice(self, roll_result=None):
+        if roll_result is None:
+            self.values = list(map(int, np.random.randint(1, 7, 4)))
+        else:
+            self.values = roll_result
+        print(type(self.values[0]))
         return self
 
     def pair(self, verbose=False):

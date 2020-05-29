@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+import pickle
 from BoardGames.CantStop import *
 
 odds_table = pd.read_csv('odds_table.csv', header=0, index_col=0)
@@ -7,7 +8,7 @@ dice_df = pd.read_csv('dice_df.csv', header=0, index_col=0)
 
 
 def test_dice_class():
-    dice = Components.Dice(1, 2, 5, 6)
+    dice = Components.Dice([1, 2, 5, 6])
     assert dice.values[0] == 1
     assert dice.values[1] == 2
     assert dice.values[2] == 5
@@ -15,21 +16,13 @@ def test_dice_class():
 
 
 def test_board_class():
-    board = Components.Board('p1', 'p2', 'p3', 'p4')
+    board = Components.Board(players=['p1', 'p2', 'p3', 'p4'])
     assert board.col_len[9] == 9
 
 
 def test_pair_dice():
-    dice = Components.Dice(1, 2, 5, 6)
+    dice = Components.Dice([1, 2, 5, 6])
     assert dice.pair() == [[3, 11], [6, 8], [7, 7]]
-
-
-def test_all_dice_combinations():
-    assert Components.Dice.all_dice_combinations().values == pytest.approx(dice_df.values)
-
-
-def test_odds_table():
-    assert Game.odds_table().values == pytest.approx(odds_table.values)
 
 
 def test_progress_value():
@@ -58,3 +51,47 @@ def test_odds():
 #  Where is that coming from and how do I remove it?
 
 
+def test_edge_case01(mocker):
+    user_inputs = ['q', [1, 1, 6, 4], 1,
+                   'q', [6, 4, 6, 6], 1,
+                   'q', [5, 5, 2, 2], 99]
+    mocker.patch('builtins.input', side_effect=user_inputs)
+    game = Game.Game()
+    assert game.pairs == [[10]]
+
+
+def test_edge_case02(mocker):
+    user_inputs = ['q', [3, 3, 6, 4], 1,
+                   'q', [5, 5, 2, 4], 99]
+    mocker.patch('builtins.input', side_effect=user_inputs)
+    game = Game.Game()
+    assert all(game.board.active_runner_cols() == [6, 10])
+
+
+def test_edge_case03(mocker):
+    user_inputs = ['q', [6, 6, 4, 1], 1,
+                   'q', [6, 4, 1, 2], 1,
+                   'q', [2, 6, 1, 2], 1, 'n',
+                   'q', [3, 5, 5, 5], 1,
+                   'q', [6, 6, 4, 1], 99]
+    mocker.patch('builtins.input', side_effect=user_inputs)
+    game = Game.Game()
+    assert all(game.board.active_runner_cols() == [8, 10])
+
+
+def test_edge_case04(mocker):
+    state = pickle.load(open('random states/rand_state04.p', 'rb'))
+    user_inputs = ['y', 1, 'y', 1, 'n',
+                   'y', 1, 'y', 99]
+    mocker.patch('builtins.input', side_effect=user_inputs)
+    Game.Game(random_state=state)
+    assert 1 == 1
+
+
+# Odds Tests
+def test_all_dice_combinations():
+    assert Components.Dice.all_dice_combinations().values == pytest.approx(dice_df.values)
+
+
+def test_odds_table():
+    assert Game.odds_table().values == pytest.approx(odds_table.values)
