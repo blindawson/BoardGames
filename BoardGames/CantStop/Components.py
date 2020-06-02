@@ -22,6 +22,8 @@ class Board:
         self.df['Runners'] = 0
 
     def advance_runners(self, player, columns):
+        if type(columns) is int:
+            columns = [columns]
         for c in columns:
             self.df.loc[c, 'Runners'] = self.df.loc[c, [player.name, 'Runners']].max() + 1
 

@@ -102,7 +102,7 @@ class Game:
                 print(f'{i+1}: Move {p[0]}')
         # TODO Check to make sure a number is input in the right range.
         option = int(input('Choose option:')) - 1
-        self.option_log.append(option)
+        self.option_log.append(option+1)
         pickle.dump(self.option_log, open('logs/user_inputs.p', 'wb'))
         if option + 1 == 99:
             print('Quitting in the middle of the game')
