@@ -55,7 +55,6 @@ class Dice:
             self.values = list(map(int, np.random.randint(1, 7, 4)))
         else:
             self.values = roll_result
-        print(type(self.values[0]))
         return self
 
     def pair(self, verbose=False):

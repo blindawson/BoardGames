@@ -5,7 +5,6 @@ importlib.reload(Game)
 importlib.reload(Components)
 importlib.reload(Player)
 
-state = pickle.load(open('random states/rand_state04.p', 'rb'))
-game = Game.Game(random_state=state)
-
-# game = Game.Game()
+# state = pickle.load(open('logs/rand_state04.p', 'rb'))
+# game = Game.Game(random_state=state)
+game = Game.Game()

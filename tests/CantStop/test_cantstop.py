@@ -88,6 +88,16 @@ def test_edge_case04(mocker):
     assert 1 == 1
 
 
+# TODO Figure out how to load in user inputs 05
+def test_edge_case05(mocker):
+    state = pickle.load(open('logs/rand_state05.p', 'rb'))
+    user_inputs = ['y', 1, 'y', 1, 'n',
+                   'y', 1, 'y', 99]
+    mocker.patch('builtins.input', side_effect=user_inputs)
+    Game.Game(random_state=state)
+    assert 1 == 1
+
+
 # Odds Tests
 def test_all_dice_combinations():
     assert Components.Dice.all_dice_combinations().values == pytest.approx(dice_df.values)
