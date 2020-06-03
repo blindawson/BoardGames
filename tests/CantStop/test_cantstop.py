@@ -95,6 +95,7 @@ def test_edge_case05(mocker):
     Game.Game(random_state=state)
     assert 1 == 1
 
+# with 1 runner left and dice are all 3's you should still be able to move twice.
 
 # Odds Tests
 def test_all_dice_combinations():
