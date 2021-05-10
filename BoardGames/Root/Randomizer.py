@@ -90,7 +90,7 @@ def randomize(players=4):
 
 
 def read_history(column):
-    return pd.read_excel(r'C:\Users\brlw\Desktop\Root.xlsx',
+    return pd.read_excel('Root.xlsx',
                          usecols=column, skiprows=2, header=None
                          ).dropna().iloc[:, 0].values
 
