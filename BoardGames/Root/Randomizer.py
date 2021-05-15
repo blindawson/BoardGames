@@ -92,6 +92,9 @@ def randomize(players=4):
     return s
 
 
+# TODO: git-secret - works on local machine and encrypts specific files before pushing to repo
+# TODO: add read_local_history back in so others don't rely on connecting to google drive
+# TODO: refactor into multiple files.
 def read_history():
     SERVICE_ACCOUNT_FILE = r'C:\Users\brlw\Desktop\Repositories\BoardGames\BoardGames\Root\keys.json'
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
