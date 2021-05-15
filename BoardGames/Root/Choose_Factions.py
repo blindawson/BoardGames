@@ -45,4 +45,9 @@ for p in players:
     print_player_odds_original(p)
     print_player_odds(analysis, p)
 
-print(Randomizer.randomize(players))
+results = Randomizer.randomize(players)
+print(f'\nLindawson: {results[0]}\n'
+      f'FiendFellow: {results[1]}\n'
+      f'Rootaphile: {results[2]}\n'
+      f'bdlocas: {results[3]}')
+
