@@ -10,19 +10,25 @@ def test_reach():
 
 
 def test_options_history():
-    assert Randomizer.options_from_history() == Randomizer.all_factions
-    assert (Randomizer.options_from_history('Marquise de Cat') ==
+    assert Randomizer.options_from_history(remove_last_faction=False) == Randomizer.all_factions
+    assert (Randomizer.options_from_history(history='Marquise de Cat',
+                                            remove_last_faction=False) ==
             ['Eyrie Dynasties', 'Vagabond', 'Riverfolk Company', 'Woodland Alliance', 'Lizard Cult',
              'Marquise de Cat', 'Eyrie Dynasties', 'Vagabond',
              'Riverfolk Company', 'Woodland Alliance', 'Lizard Cult'])
-    assert (Randomizer.options_from_history(['Marquise de Cat']) ==
+    assert (Randomizer.options_from_history(history=['Marquise de Cat'],
+                                            remove_last_faction=False) ==
             ['Eyrie Dynasties', 'Vagabond', 'Riverfolk Company', 'Woodland Alliance', 'Lizard Cult',
              'Marquise de Cat', 'Eyrie Dynasties', 'Vagabond',
              'Riverfolk Company', 'Woodland Alliance', 'Lizard Cult'])
-    assert (Randomizer.options_from_history(['Marquise de Cat', 'Marquise de Cat']) ==
+    assert (Randomizer.options_from_history(history=['Marquise de Cat', 'Marquise de Cat'],
+                                            remove_last_faction=False) ==
             ['Eyrie Dynasties', 'Vagabond', 'Riverfolk Company', 'Woodland Alliance', 'Lizard Cult',
              'Eyrie Dynasties', 'Vagabond', 'Riverfolk Company', 'Woodland Alliance', 'Lizard Cult',
              'Marquise de Cat', 'Eyrie Dynasties', 'Vagabond', 'Riverfolk Company', 'Woodland Alliance', 'Lizard Cult'])
+    assert (Randomizer.options_from_history(history=['Vagabond', 'Riverfolk Company']) ==
+            ['Marquise de Cat', 'Eyrie Dynasties', 'Woodland Alliance', 'Lizard Cult',
+             'Marquise de Cat', 'Eyrie Dynasties', 'Vagabond', 'Woodland Alliance', 'Lizard Cult'])
 
 
 def test_faction():

@@ -15,7 +15,7 @@ reach_min = {2: 17, 3: 18, 4: 21, 5: 25, 6: 28}
 
 
 # Make a list of options of factions to play weighted away from factions played previously.
-def options_from_history(history=None):
+def options_from_history(history=None, remove_last_faction=True):
     options = []
     if history is not None:
         if isinstance(history, str):
@@ -27,6 +27,8 @@ def options_from_history(history=None):
                 options.extend(all_factions)
                 options.remove(h)
     options.extend(all_factions)
+    if remove_last_faction and history:
+        options = [i for i in options if i != history[-1]]
     return options
 
 
@@ -43,13 +45,17 @@ class Faction:
 
 
 class Player:
-    def __init__(self, name, history=None):
+    def __init__(self, name, history=None, faction=None):
         self.name = name
         self.history = history
         self.options = options_from_history(self.history)
+        self.faction = faction
 
     def __repr__(self):
         return self.name
+
+    def set_faction(self, faction):
+        self.faction = faction
 
 
 def calculate_reach(factions):
@@ -62,7 +68,9 @@ def calculate_reach(factions):
 
 def select_faction(player=None):
     if isinstance(player, Player):
-        return random.choice(player.options)
+        selected_faction = random.choice(player.options)
+        player.set_faction(selected_faction)
+        return selected_faction
     else:
         return random.choice(all_factions)
 
@@ -74,20 +82,19 @@ def test_duplicates(selected, allow2vagabonds=True):
         return len(selected) != len(set(selected))
 
 
+def test_low_reach(selected):
+    return calculate_reach(selected) < reach_min[len(selected)]
+
+
 def randomize(players=4):
     if isinstance(players, int):
         players = range(players)
 
-    def test_low_reach(selected):
-        return calculate_reach(selected) < reach_min[len(selected)]
-
-    # TODO: TEST FOR LOW REACH
     # TODO: add optional feature to add custom weights for choosing factions
     # TODO: add optional feature so you don't play the same faction twice in a row
 
     s = [select_faction(player) for player in players]
     while test_duplicates(s) | test_low_reach(s):
-    # while test_duplicates(s):
         s = [select_faction(player) for player in players]
     return s
 
