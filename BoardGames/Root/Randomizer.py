@@ -91,7 +91,6 @@ def randomize(players=4):
         players = range(players)
 
     # TODO: add optional feature to add custom weights for choosing factions
-    # TODO: add optional feature so you don't play the same faction twice in a row
 
     s = [select_faction(player) for player in players]
     while test_duplicates(s) | test_low_reach(s):
