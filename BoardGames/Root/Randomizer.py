@@ -109,10 +109,15 @@ def read_history():
     spreadsheet = '1Fe_M9Xtweh_GjggHKSe0FaoruKiGBXj1hkQEHyH38u4'
     service = build('sheets', 'v4', credentials=credentials)
     sheet = service.spreadsheets()
-    result = sheet.values().get(spreadsheetId=spreadsheet, range=f'Sheet1!C:L').execute()
-    values = list(itertools.chain.from_iterable(result.get('values', [])[2:]))
-    p1 = values[::10]
-    p2 = values[3::10]
-    p3 = values[6::10]
-    p4 = values[9::10]
+
+    # TODO: loop over results and player
+    r1 = sheet.values().get(spreadsheetId=spreadsheet, range=f'Sheet1!C:C').execute()
+    r2 = sheet.values().get(spreadsheetId=spreadsheet, range=f'Sheet1!F:F').execute()
+    r3 = sheet.values().get(spreadsheetId=spreadsheet, range=f'Sheet1!I:I').execute()
+    r4 = sheet.values().get(spreadsheetId=spreadsheet, range=f'Sheet1!L:L').execute()
+
+    p1 = list(itertools.chain.from_iterable(r1.get('values', [])[2:]))
+    p2 = list(itertools.chain.from_iterable(r2.get('values', [])[2:]))
+    p3 = list(itertools.chain.from_iterable(r3.get('values', [])[2:]))
+    p4 = list(itertools.chain.from_iterable(r4.get('values', [])[2:]))
     return p1, p2, p3, p4

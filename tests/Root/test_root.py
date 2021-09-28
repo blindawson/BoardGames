@@ -76,3 +76,5 @@ def test_test_duplicates():
 
 def test_randomize():
     assert isinstance(Randomizer.randomize()[3], str)
+
+# TODO test for read_history()
