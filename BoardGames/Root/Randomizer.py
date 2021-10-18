@@ -3,14 +3,22 @@ import itertools
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 
-all_factions = ['Marquise de Cat', 'Eyrie Dynasties', 'Vagabond',
-                'Riverfolk Company', 'Woodland Alliance', 'Lizard Cult']
-reach = {'Marquise de Cat': 10,
-         'Eyrie Dynasties': 7,
-         'Vagabond': 5,
-         'Riverfolk Company': 5,
-         'Woodland Alliance': 3,
-         'Lizard Cult': 2}
+all_factions = [
+    "Marquise de Cat",
+    "Eyrie Dynasties",
+    "Vagabond",
+    "Riverfolk Company",
+    "Woodland Alliance",
+    "Lizard Cult",
+]
+reach = {
+    "Marquise de Cat": 10,
+    "Eyrie Dynasties": 7,
+    "Vagabond": 5,
+    "Riverfolk Company": 5,
+    "Woodland Alliance": 3,
+    "Lizard Cult": 2,
+}
 reach_min = {2: 17, 3: 18, 4: 21, 5: 25, 6: 28}
 
 
@@ -60,7 +68,7 @@ class Player:
 
 def calculate_reach(factions):
     total_reach = sum([Faction(faction).reach for faction in factions])
-    count_vagabonds = factions.count('Vagabond')
+    count_vagabonds = factions.count("Vagabond")
     if count_vagabonds == 2:
         total_reach -= 3
     return total_reach
@@ -76,7 +84,7 @@ def select_faction(player=None):
 
 
 def test_duplicates(selected, allow2vagabonds=True):
-    if allow2vagabonds & (selected.count('Vagabond') == 2):
+    if allow2vagabonds & (selected.count("Vagabond") == 2):
         return len(selected) != len(set(selected)) + 1
     else:
         return len(selected) != len(set(selected))
@@ -102,22 +110,23 @@ def randomize(players=4):
 # TODO: add read_local_history back in so others don't rely on connecting to google drive
 # TODO: refactor into multiple files.
 def read_history():
-    SERVICE_ACCOUNT_FILE = r'C:\Users\brlw\Desktop\Repositories\BoardGames\BoardGames\Root\keys.json'
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+    service_account_file = "keys.json"
+    scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
     credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    spreadsheet = '1Fe_M9Xtweh_GjggHKSe0FaoruKiGBXj1hkQEHyH38u4'
-    service = build('sheets', 'v4', credentials=credentials)
+        service_account_file, scopes=scopes
+    )
+    spreadsheet = "1Fe_M9Xtweh_GjggHKSe0FaoruKiGBXj1hkQEHyH38u4"
+    service = build("sheets", "v4", credentials=credentials)
     sheet = service.spreadsheets()
 
     # TODO: loop over results and player
-    r1 = sheet.values().get(spreadsheetId=spreadsheet, range=f'Sheet1!C:C').execute()
-    r2 = sheet.values().get(spreadsheetId=spreadsheet, range=f'Sheet1!F:F').execute()
-    r3 = sheet.values().get(spreadsheetId=spreadsheet, range=f'Sheet1!I:I').execute()
-    r4 = sheet.values().get(spreadsheetId=spreadsheet, range=f'Sheet1!L:L').execute()
+    r1 = sheet.values().get(spreadsheetId=spreadsheet, range=f"Sheet1!C:C").execute()
+    r2 = sheet.values().get(spreadsheetId=spreadsheet, range=f"Sheet1!F:F").execute()
+    r3 = sheet.values().get(spreadsheetId=spreadsheet, range=f"Sheet1!I:I").execute()
+    r4 = sheet.values().get(spreadsheetId=spreadsheet, range=f"Sheet1!L:L").execute()
 
-    p1 = list(itertools.chain.from_iterable(r1.get('values', [])[2:]))
-    p2 = list(itertools.chain.from_iterable(r2.get('values', [])[2:]))
-    p3 = list(itertools.chain.from_iterable(r3.get('values', [])[2:]))
-    p4 = list(itertools.chain.from_iterable(r4.get('values', [])[2:]))
+    p1 = list(itertools.chain.from_iterable(r1.get("values", [])[2:]))
+    p2 = list(itertools.chain.from_iterable(r2.get("values", [])[2:]))
+    p3 = list(itertools.chain.from_iterable(r3.get("values", [])[2:]))
+    p4 = list(itertools.chain.from_iterable(r4.get("values", [])[2:]))
     return p1, p2, p3, p4
