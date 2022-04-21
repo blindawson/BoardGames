@@ -3,4 +3,6 @@
 *.iml
 tests/CantStop/logs/rand_state.p
 BoardGames/Root/keys.json
-*.ipynb
+*.ipynb*
+BoardGames.egg-info/*
+venv/*
