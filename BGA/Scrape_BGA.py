@@ -4,8 +4,11 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
 import time
+import os
+import pandas as pd
 
-driver = webdriver.Chrome(ChromeDriverManager().install())
+service = webdriver.chrome.service.Service(ChromeDriverManager().install())
+browser = webdriver.Chrome(service=service)
 
 #
 # res = requests.get('https://boardgamearena.com/gamestats?player=84034013')
@@ -20,28 +23,51 @@ driver = webdriver.Chrome(ChromeDriverManager().install())
 #
 # soup.select('#gamelist_inner > tr:nth-child(1) > td:nth-child(1) > a > span.smalltext')
 
-browser = webdriver.Chrome(r'C:\Users\bisfo\Desktop\chromedriver.exe')
-browser.get('https://boardgamearena.com/gamestats?player=84034013')
+browser.get("https://boardgamearena.com/gamestats?player=84034013")
+time.sleep(20)
 
-see_more_link = browser.find_element_by_css_selector('#see_more_tables')
-while True:
-    try:
-        if browser.find_element_by_css_selector('#head_infomsg_1 > div.head_infomsg_item'):
-            print('no more results')
-            break
-    except NoSuchElementException:
-        see_more_link.click()
-        time.sleep(1)
+# see_more_link = browser.find_element_by_css_selector('#see_more_tables')
+# while True:
+#     try:
+#         if browser.find_element_by_css_selector('#head_infomsg_1 > div.head_infomsg_item'):
+#             print('no more results')
+#             break
+#     except NoSuchElementException:
+#         see_more_link.click()
+#         time.sleep(1)
+
+df = pd.DataFrame([], columns=["Game", "Datetime", "Duration", "Players"])
+
+table = browser.find_element(
+    by=webdriver.common.by.By.XPATH, value='//*[@id="gamelist_inner"]'
+)
+rows = table.find_elements(by=webdriver.common.by.By.TAG_NAME, value="tr")
 
 
-game_name = browser.find_element_by_css_selector(
-    '#gamelist_inner > tr:nth-child(1) > td:nth-child(1) > a').text.split('\n')[0]
-date = browser.find_element_by_css_selector(
-    '#gamelist_inner > tr:nth-child(1) > td:nth-child(2) > div:nth-child(1)').text.split()[0]
-duration = browser.find_element_by_css_selector(
-    '#gamelist_inner > tr:nth-child(1) > td:nth-child(2) > div:nth-child(2)').text
-player_name = browser.find_element_by_css_selector(
-    '#gamelist_inner > tr:nth-child(1) > td:nth-child(3) > div:nth-child(1) > div.name > a').text
-player_score = browser.find_element_by_css_selector(
-    '#gamelist_inner > tr:nth-child(1) > td:nth-child(3) > div:nth-child(1) > div.score').text
+def read_row(df, row):
+    row = row.text.split("\n")
+    [game_name, log_id, date_played, duration] = row[:4]
+    players = row[4:-3]
+    df2 = pd.DataFrame(
+        {
+            "Game": game_name,
+            "Datetime": date_played,
+            "Duration": duration,
+            "Players": [players],
+        },
+        index=[log_id],
+    )
+    return pd.concat([df, df2])
+
+
+for row in rows:
+    df = read_row(df, row)
+
+df['Duration'] = df['Duration'].apply(lambda x: int(x[:-4]))
+# Remove dates that say an hour ago or yesterday or something
+# Convert datetime to separate date and time categories
+# Postprocess players to line up with Upload_BGG.py
+# We need a dictionary of BGG game ids
+print(df)
+
 # browser.quit()

@@ -27,7 +27,7 @@ with requests.Session() as s:
         "comments": "",
         "length": 60,
         "twitter": "false",
-        "location": "Home",
+        "location": "BGA",
         "objectid": "205637",
         "quantity": "1",
         "action": "save",
